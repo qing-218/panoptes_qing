@@ -1,0 +1,195 @@
+diff --git a/node_modules/@types/chrome-remote-interface/index.d.ts b/node_modules/@types/chrome-remote-interface/index.d.ts
+index 0bb373a..e9b13f3 100755
+--- a/node_modules/@types/chrome-remote-interface/index.d.ts
++++ b/node_modules/@types/chrome-remote-interface/index.d.ts
+@@ -5,8 +5,8 @@
+ // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+ // Minimum TypeScript Version: 3.9
+ 
+-import type ProtocolProxyApi from 'devtools-protocol/types/protocol-proxy-api';
+-import type ProtocolMappingApi from 'devtools-protocol/types/protocol-mapping';
++import type ProtocolProxyApi from '../../devtools-protocol/types/protocol-proxy-api.js';
++import type ProtocolMappingApi from '../../devtools-protocol/types/protocol-mapping.js';
+ 
+ declare namespace CDP {
+     interface BaseOptions {
+@@ -51,12 +51,17 @@ declare namespace CDP {
+         data?: string | undefined;
+     }
+ 
+-    interface SendCallback<T extends keyof ProtocolMappingApi.Commands> {
++    interface SendCallbackBase<T> {
+         (error: true, response: SendError): void;
+-        (error: false, response: ProtocolMappingApi.Commands[T]['returnType']): void;
++        (error: false, response: T): void;
+         (error: Error, response: undefined): void;
+     }
+ 
++    interface SendCallback<T extends keyof ProtocolMappingApi.Commands>
++        extends SendCallbackBase<ProtocolMappingApi.Commands[T]['returnType']> {
++
++    }
++
+     interface Target {
+         description: string;
+         devtoolsFrontendUrl: string;
+@@ -153,36 +158,77 @@ declare namespace CDP {
+     // Generated content end.
+     /////////////////////////////////////////////////
+ 
+-    type GetEventFromString<D extends string, S extends string> = S extends `${D}.${infer E}` ? E : never;
+-    type GetEvent<D extends string> = GetEventFromString<D, keyof ProtocolMappingApi.Events>;
+-    type GetReturnType<D extends string, E extends string> =
+-        `${D}.${E}` extends keyof ProtocolMappingApi.Events ?
+-            ProtocolMappingApi.Events[`${D}.${E}`][0] : never;
+-    type DoEventPromises<D extends string> = {
+-        [event in GetEvent<D>]:
+-            // tslint:disable-next-line: void-return
+-            () => Promise<GetReturnType<D, event> extends undefined ? void : GetReturnType<D, event>>
++
++    //Utils
++    type IsFunction<T> = T extends (params: any) => any ? true : false;
++
++    type IsNullableObj<T> = Record<T, undefiend> extends T ? true : false;
++
++    type IsDefined<T> = T extends undefined ? false : true;
++
++    type IsOptional<T> = IsDefined<T> extends true ? IsNullableObj<T> : true;
++
++
++    //Events
++    type EventFromString<D extends string, S extends string> = S extends `${D}.${infer E}` ? E : never;
++
++    type Events<D extends string> = EventFromString<D, keyof ProtocolMappingApi.Events>;
++
++    type EventParams<D extends string, E extends string> =
++        `${D}.${E}` extends keyof ProtocolMappingApi.Events ? ProtocolMappingApi.Events[`${D}.${E}`][0] : never;
++
++    type EventPromises<D extends string> = {
++        [E in Events<D>]: (sessionId?: string) =>
++            Promise<EventParams<D, E> extends undefined ? void : EventParams<D, E>>
+     };
+-    type DoEventListeners<D extends string> = {
+-        [event in GetEvent<D>]:
+-            (listener: (params: GetReturnType<D, event>, sessionId?: string) => void) => () => Client
++
++    type EventCallbacks<D extends string> = {
++        [E in Events<D>]: (
++            callback: (params: EventParams<D, E>, sessionId?: string) => void,
++            sessionId?: string
++        ) => () => Client
++    };
++
++    type EventApi<D> = D extends string ? EventPromises<D> & EventCallbacks<D> : {};
++
++
++    //Commands
++    type CommandPromises<T> = {
++        [key in keyof T]: true extends (IsFunction<T[key]> & IsOptional<Parameters<T[key]>[0]>)
++            ? (sessionId?: string) => ReturnType<T[key]>
++            : T[key]
+     };
+-    type DoEventObj<D> = D extends string ? DoEventPromises<D> & DoEventListeners<D> : {};
+-
+-    type IsNullableObj<T> = Record<keyof T, undefined> extends T ? true : false;
+-    /**
+-     * Checks whether the only parameter of `T[key]` is nullable i.e. all of
+-     * its properties are optional, and makes it optional if so.
+-     */
+-    type OptIfParamNullable<T> = {
+-        [key in keyof T]: T[key] extends (params: any) => any ?
+-            IsNullableObj<Parameters<T[key]>[0]> extends true ?
+-                (params?: Parameters<T[key]>[0]) => ReturnType<T[key]> :
+-                T[key] :
+-            T[key]
++
++    type CommandCallbacks<T> = {
++        [key in keyof T]: true extends (IsFunction<T[key]> & IsOptional<Parameters<T[key]>[0]>)
++            ? (callback: SendCallbackBase<Awaited<ReturnType<T[key]>>>, sessionId?: string) => void
++            : T[key]
++    }
++
++    type CommandParamsPromises<T> = {
++        [key in keyof T]: true extends (IsFunction<T[key]> & IsDefined<Parameters<T[key]>[0]>)
++            ? (params: Parameters<T[key]>[0], sessionId?: string) => ReturnType<T[key]>
++            : T[key]
++    }
++
++    type CommandParamsCallbacks<T> = {
++        [key in keyof T]: true extends (IsFunction<T[key]> & IsDefined<Parameters<T[key]>[0]>)
++            ? (params: Parameters<T[key]>[0],
++                callback: SendCallbackBase<Awaited<ReturnType<T[key]>>>,
++                sessionId?: string) => void
++            : T[key]
++    }
++
++
++
++    type ImproveAPI<T> = {
++        [key in keyof T]: EventApi<key>
++            & CommandPromises<T[key]>
++            & CommandCallbacks<T[key]>
++            & CommandParamsPromises<T[key]>
++            & CommandParamsCallbacks<T[key]>
+     };
+ 
+-    type ImproveAPI<T> = {[key in keyof T]: DoEventObj<key> & OptIfParamNullable<T[key]>};
+     interface StableDomains {
+         Browser: ProtocolProxyApi.BrowserApi;
+         Debugger: ProtocolProxyApi.DebuggerApi;
+@@ -267,27 +313,46 @@ declare namespace CDP {
+     type AllDomains = StableDomains & DeprecatedDomains & ExperimentalDomains;
+     type Client = {
+         close: () => Promise<void>;
++
+         on(event: 'event', callback: (message: EventMessage) => void): void;
+         on(event: 'ready' | 'disconnect', callback: () => void): void;
++
+         // '<domain>.<method>' i.e. Network.requestWillBeSent
+-        on<T extends keyof ProtocolMappingApi.Events>(event: T, callback: (params: ProtocolMappingApi.Events[T][0], sessionId?: string) => void): void;
++        on<T extends keyof ProtocolMappingApi.Events>(
++            event: T,
++            callback: (params: ProtocolMappingApi.Events[T][0], sessionId?: string) => void
++        ): () => void;
++        on<T extends keyof ProtocolMappingApi.Events>(event: T): Promise<ProtocolMappingApi.Events[T][0]>;
++
+         // '<domain>.<method>.<sessionId>' i.e. Network.requestWillBeSent.abc123
+-        on(event: string, callback: (params: object, sessionId?: string) => void): void;
++        on(event: string, callback: (params: object, sessionId?: string) => void): () => void;
++        on(event: string): Promise<object>;
++
+         // client.send(method, [params], [sessionId], [callback])
+-        send<T extends keyof ProtocolMappingApi.Commands>(event: T, callback: SendCallback<T>): void;
+-        send<T extends keyof ProtocolMappingApi.Commands>(event: T, params: ProtocolMappingApi.Commands[T]['paramsType'][0], callback: SendCallback<T>): void;
+-        send<T extends keyof ProtocolMappingApi.Commands>(event: T, params: ProtocolMappingApi.Commands[T]['paramsType'][0], sessionId: string, callback: SendCallback<T>): void;
+-        send<T extends keyof ProtocolMappingApi.Commands>(event: T, params?: ProtocolMappingApi.Commands[T]['paramsType'][0], sessionId?: string):
+-            Promise<ProtocolMappingApi.Commands[T]['returnType']>;
++        send<T extends keyof ProtocolMappingApi.Commands>(
++            event: T,
++            callback: SendCallback<T>,
++            params?: ProtocolMappingApi.Commands[T]['paramsType'][0],
++            sessionId?: string
++        ): void;
++        send<T extends keyof ProtocolMappingApi.Commands>(
++            event: T,
++            params?: ProtocolMappingApi.Commands[T]['paramsType'][0],
++            sessionId?: string
++        ): Promise<ProtocolMappingApi.Commands[T]['returnType']>;
+     } & EventPromises<ProtocolMappingApi.Events> & EventCallbacks<ProtocolMappingApi.Events> & ImproveAPI<AllDomains>;
+ 
+     // '<domain>.<event>' i.e. Page.loadEventFired
+     type EventPromises<T extends ProtocolMappingApi.Events> = {
+-        [Property in keyof T]: () => T[Property] extends [any] ? Promise<T[Property][0]> : Promise<void>;
++        [Property in keyof T]:
++            (sessionId?: string) => T[Property] extends [any] ? Promise<T[Property][0]> : Promise<void>;
+     };
+ 
+     type EventCallbacks<T extends ProtocolMappingApi.Events> = {
+-        [Property in keyof T]: (callback: (params: T[Property] extends [any] ? T[Property][0] : undefined, sessionId?: string) => void) => () => Client;
++        [Property in keyof T]: (
++            callback: (params: T[Property] extends [any] ? T[Property][0] : undefined, sessionId?: string) => void,
++            sessionId?: string
++        ) => () => Client;
+     };
+ }
+ 

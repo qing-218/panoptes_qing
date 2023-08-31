@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+message Request {
+  message ThreatInfo {
+    message ThreadEntry {
+      required string url = 2;
+    }
+    repeated ThreadEntry threat_entries = 3;
+  }
+  required ThreatInfo threat_info = 2;
+}

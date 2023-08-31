@@ -1,0 +1,2 @@
+websockets==10.4.0
+mitmproxy==9.0.1

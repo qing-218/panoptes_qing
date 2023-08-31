@@ -1,0 +1,9 @@
+node_modules/
+parsers/node_modules/
+fridaModules/node_modules/
+browsers/*
+!browsers/template/
+venv/
+mitmproxy.cer
+*.0
+.~lock.*

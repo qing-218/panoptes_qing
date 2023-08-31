@@ -1,0 +1,5 @@
+dnspython==2.3.0
+adblockparser==0.7
+re2==0.2.24
+tldextract==3.4.4
+mitmproxy==9.0.1

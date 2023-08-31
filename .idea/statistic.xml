@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Statistic">
+    <option name="fileTypes" value="pyc;cer;" />
+    <option name="excludedDirectories">
+      <list>
+        <option value="$PROJECT_DIR$/venv" />
+        <option value="$PROJECT_DIR$/browsers" />
+        <option value="$PROJECT_DIR$/playground" />
+        <option value="$PROJECT_DIR$/addons/common" />
+        <option value="$PROJECT_DIR$/fridaScripts/common" />
+        <option value="$PROJECT_DIR$/fridaScripts/dist" />
+        <option value="$PROJECT_DIR$/fridaScripts/generated" />
+      </list>
+    </option>
+  </component>
+</project>

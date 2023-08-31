@@ -1,0 +1,15 @@
+{
+  "name": "fridascripts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "./compile.sh"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "frida-compile": "^16.3.0"
+  }
+}
