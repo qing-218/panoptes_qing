@@ -573,7 +573,7 @@ export default abstract class BaseBrowserModule<
             createHandler(this._enableBindingHandling,
             createHandler(this._callSetupTab,
             NoopHandler
-            )))))).handle.bind(this);
+        )))))).handle.bind(this);
         //@formatter:on
 
         const getTabIndex = (id: string) =>
