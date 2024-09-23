@@ -1,6 +1,7 @@
 # Panoptes
 
-A multi-browser android crawler
+A multi-browser android crawler, created for and used in:
+> John Pegioudis, Emmanouil Papadogiannakis, Nicolas Kourtellis, Evangelos P. Markatos, and Panagiotis Papadopoulos. 2023. Not only E.T. Phones Home: Analysing the Native User Tracking of Mobile Browsers. In Proceedings of the 2023 ACM on Internet Measurement Conference (IMC '23). Association for Computing Machinery, New York, NY, USA, 181–187. https://doi.org/10.1145/3618257.3624842
 
 ## Features
 
@@ -26,6 +27,6 @@ A multi-browser android crawler
 
 ## [Usage guide](./docs/usage.md)
 
-## Credits
+## Special thanks
 
-The mitmproxy addon, is loosely based on [mitmproxy-node](https://github.com/jvilk/mitmproxy-node)
+The mitmproxy addon is loosely based on [mitmproxy-node](https://github.com/jvilk/mitmproxy-node)
